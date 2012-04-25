@@ -1,6 +1,9 @@
 package DataMining;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.TreeMap;
+import java.util.Arrays;
 
 /**
  * User: Maarten
@@ -9,28 +12,64 @@ import java.util.TreeMap;
  */
 public class UserPreferences {
 
-    int userId;
-    TreeMap<Integer, Double> ratings; //K = item id, V = rate
+    private int userId;
+    private int[] itemIds;
+    private double[] ratings;
 
     public UserPreferences(){
-        this.ratings = new TreeMap<Integer, Double>();
         this.userId = -1;
+        this.itemIds = new int[0];
+        this.ratings = new double[0];
     }
 
-    /**
-     * Adds or updates a rating
-     */
-    public void addRating(int itemId, double rate) {
-        ratings.put(itemId, rate);
+    public void addRatings(Map<Integer, Double> prefs)
+    {
+        int nextPos = itemIds.length;
+        int[] new_itemIds = Arrays.copyOf(itemIds, (nextPos+prefs.size()));
+        double[] new_ratings = Arrays.copyOf(ratings, (nextPos+prefs.size()));
+
+        for (Map.Entry<Integer, Double> entry : prefs.entrySet())
+        {
+            new_itemIds[nextPos] = entry.getKey();
+            new_ratings[nextPos++] = entry.getValue();
+        }
+
+        itemIds = new_itemIds;
+        ratings = new_ratings;
     }
+
 
     /**
      *
      */
     public static void main(String[] args) {
         UserPreferences uP = new UserPreferences();
-        uP.addRating(1, 2.4);
-        System.out.println(uP.ratings.get(1));
+        HashMap<Integer, Double> prefs = new HashMap<Integer, Double>();
+        prefs.put(1, 2.0);
+        prefs.put(2, 3.0);
+        prefs.put(3, 9.0);
+        prefs.put(4, 7.0);
+        prefs.put(5, 1.0);
+        prefs.put(6, 6.0);
+
+
+        uP.addRatings(prefs);
+        for (double rating : uP.ratings) {
+            System.out.println(rating);
+        }
+
+        System.out.print("\n");
+
+        uP.addRatings(prefs);
+        for (double rating : uP.ratings) {
+            System.out.println(rating);
+        }
+
+        System.out.print("\n");
+
+        for (int id : uP.itemIds) {
+            System.out.println(id);
+        }
     }
 
 }
