@@ -1,5 +1,8 @@
-*.class
+*.clas
+.classpath
 .DS_Store
+.project
+bin/
 
 # Package Files #
 *.jar

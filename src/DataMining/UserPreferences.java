@@ -1,9 +1,17 @@
 package DataMining;
 
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.Arrays;
+import com.mongodb.Mongo;
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
+import com.mongodb.DBCursor;
+import com.mongodb.MongoException;
 
 /**
  * User: Maarten
@@ -16,8 +24,8 @@ public class UserPreferences {
     private int[] itemIds;
     private double[] ratings;
 
-    public UserPreferences(){
-        this.userId = -1;
+    public UserPreferences(int id){
+        this.userId = id;
         this.itemIds = new int[0];
         this.ratings = new double[0];
     }
@@ -43,7 +51,22 @@ public class UserPreferences {
      *
      */
     public static void main(String[] args) {
-        UserPreferences uP = new UserPreferences();
+    	
+    	Mongo m = null;
+		try {
+			m = new Mongo();
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (MongoException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+    	DB db = m.getDB( "mydb" );
+    	
+    		
+        UserPreferences uP = new UserPreferences(1);
         HashMap<Integer, Double> prefs = new HashMap<Integer, Double>();
         prefs.put(1, 2.0);
         prefs.put(2, 3.0);
