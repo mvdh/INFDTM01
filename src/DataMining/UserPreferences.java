@@ -32,7 +32,7 @@ public class UserPreferences {
 			if (itemIds.length == 0){					// De eerste keer maken we gewoon een nieuwe array aan
 				itemIds = new int[]{newId};
 				ratings = new double[]{newRating};
-			} else if (newIndex >= 0){ 	// Als de itemId al bestaat slaan we alleen de nieuwe rating op
+			} else if (newIndex >= 0){ 					// Als de itemId al bestaat slaan we alleen de nieuwe rating op
 				ratings[newIndex] = newRating;
 			} else {									// Anders wordt een nieuw item tussen gevoegd
 				
@@ -43,7 +43,7 @@ public class UserPreferences {
 				int[] newItemIds = Arrays.copyOf(itemIds, itemIds.length+1);
 				double[] newRatings = Arrays.copyOf(ratings, ratings.length+1);
 				
-				if (newItemIds.length > newIndex+1){	// Opschuiven, tenzij de nieuwe op het einde moet
+				if (newIndex+1 < newItemIds.length){	// Opschuiven, tenzij de nieuwe op het einde moet
 					System.arraycopy(itemIds, newIndex, newItemIds, newIndex+1, newItemIds.length-newIndex-1);
 					System.arraycopy(ratings, newIndex, newRatings, newIndex+1, newRatings.length-newIndex-1);					
 				}
@@ -60,8 +60,8 @@ public class UserPreferences {
 	}
 	
 	public String toString(){
-		String result = "";
-		
+		String result = "Ratings for user "+userId+"\n";
+		result += "--------------------\n";
 		for (int i=0; i<itemIds.length; i++){
 			result += itemIds[i] +" - "+ ratings[i] +"\n";
 		}

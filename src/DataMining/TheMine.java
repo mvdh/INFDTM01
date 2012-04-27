@@ -1,50 +1,33 @@
 package DataMining;
 
-import java.net.UnknownHostException;
-
-import com.mongodb.DB;
-import com.mongodb.Mongo;
-import com.mongodb.MongoException;
+import java.util.TreeMap;
+import java.util.Random;
 
 public class TheMine {
+	
+	static TreeMap<Integer, UserPreferences> userPrefs;
+	static Random r;
 
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
-
-		Mongo m = null;
-		try {
-			m = new Mongo();
-		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (MongoException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		
+		userPrefs = new TreeMap<Integer, UserPreferences>();
+		r = new Random(1138);
+		
+		for (int i=1; i<=7; i++){
+			userPrefs.put(i, new UserPreferences(i));
+		}
+		
+		for (int i=0; i<70; i++){
+			userPrefs.get(r.nextInt(7)+1).addRatings(r.nextInt(10)+1, ((double)r.nextInt(11))/2);
+		}
+		
+		for (UserPreferences uP : userPrefs.values()){
+			System.out.println(uP.toString());
 		}
 
-		DB db = m.getDB("mydb");
-
-		UserPreferences uP = new UserPreferences(1);
-
-		uP.addRatings(3, 4.0);
-		System.out.print(uP.toString());
-
-		uP.addRatings(5, 3.5);
-		System.out.print(uP.toString());
-
-		uP.addRatings(2, 1.0);
-		System.out.print(uP.toString());
-
-		uP.addRatings(3, 3.5);
-		System.out.print(uP.toString());
-
-		uP.addRatings(1, 5.0);
-		System.out.print(uP.toString());
-
-		uP.addRatings(4, 5.0);
-		System.out.print(uP.toString());
 
 	}
 
