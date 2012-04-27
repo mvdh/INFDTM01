@@ -45,7 +45,7 @@ public class UserPreferences {
 				
 				if (newIndex+1 < newItemIds.length){	// Opschuiven, tenzij de nieuwe op het einde moet
 					System.arraycopy(itemIds, newIndex, newItemIds, newIndex+1, newItemIds.length-newIndex-1);
-					System.arraycopy(ratings, newIndex, newRatings, newIndex+1, newRatings.length-newIndex-1);					
+					System.arraycopy(ratings, newIndex, newRatings, newIndex+1, newRatings.length-newIndex-1);
 				}
 				
 				// Beschikbaar gekomen ruimte vullen
@@ -59,6 +59,7 @@ public class UserPreferences {
 
 	}
 	
+	@Override
 	public String toString(){
 		String result = "Ratings for user "+userId+"\n";
 		result += "--------------------\n";
