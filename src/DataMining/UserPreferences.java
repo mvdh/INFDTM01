@@ -25,7 +25,7 @@ public class UserPreferences {
 		this.ratings = new double[0];
 	}
 
-	public void addRatings(int newId, Double newRating) {
+	public void addRating(int newId, Double newRating) {
 			// zoek de eerstvolgende logische locatie X
 			int newIndex = Arrays.binarySearch(itemIds, newId);
 						
