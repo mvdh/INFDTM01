@@ -36,7 +36,7 @@ public class UserPreferences {
 				newIndex *= -1;
 				newIndex -= 1;
 								
-				// Kopie‘n met extra ruimte
+				// Kopien met extra ruimte
 				int[] newItemIds = Arrays.copyOf(itemIds, itemIds.length+1);
 				double[] newRatings = Arrays.copyOf(ratings, ratings.length+1);
 				
