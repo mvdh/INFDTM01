@@ -7,8 +7,12 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Random;
+import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
 
@@ -50,28 +54,30 @@ public class TheMine {
 		loadFromDatabase("test_data");
 
 		// Print all ratings for all users
-		for (UserPreferences uP : userPrefs.values()) {
-			System.out.println(uP.toString());
-		}
+//		for (UserPreferences uP : userPrefs.values()) {
+//			System.out.println(uP.toString());
+//		}
+		
+		System.out.println(getRecommendation(7));
 
 	
 		/*
 		 * Load and/or print movie data
 		 */
 		
-		userPrefs = new TreeMap<Integer, UserPreferences>();
-		
-		// Import the test data
-		if (db.getCollection("movie_ratings").count() == 0)
-			loadFileIntoDatabase("u.data", "movie_ratings");
-
-		// Load data from database into userPrefs
-		loadFromDatabase("movie_ratings");
-
-		// Print all ratings for all users
-		for (UserPreferences uP : userPrefs.values()) {
-			System.out.println(uP.toString());
-		}
+//		userPrefs = new TreeMap<Integer, UserPreferences>();
+//		
+//		// Import the test data
+//		if (db.getCollection("movie_ratings").count() == 0)
+//			loadFileIntoDatabase("u.data", "movie_ratings");
+//
+//		// Load data from database into userPrefs
+//		loadFromDatabase("movie_ratings");
+//
+//		// Print all ratings for all users
+//		for (UserPreferences uP : userPrefs.values()) {
+//			System.out.println(uP.toString());
+//		}
 
 				
 		// Close connection to database
@@ -87,6 +93,83 @@ public class TheMine {
 		uP.addRating(itemId, rating);
 	}
 
+	public static String getRecommendation(int userId){
+		String result = "";
+				
+		UserPreferences targetP = userPrefs.get(userId);
+		
+		int[] targetUserItemIds = targetP.getItemIds();
+		
+		for (UserPreferences comparedP : userPrefs.values()){
+			
+			if (comparedP.getUserId() == userId){
+				break;
+			}
+			
+			int[] comparedUserItemIds = comparedP.getItemIds();
+			int[] intersection = new int[0];					// items rated by both users
+			Integer[] relativeComplement = new Integer[0];		// items only rated by compared user
+			
+			for (int id : comparedUserItemIds){
+				if (Arrays.binarySearch(targetUserItemIds, id) >= 0){
+					intersection = Arrays.copyOf(intersection, intersection.length+1);
+					intersection[intersection.length-1] = id;
+				} else {
+					relativeComplement = Arrays.copyOf(relativeComplement, relativeComplement.length+1);
+					relativeComplement[relativeComplement.length-1] = id;
+				}
+			}
+			
+			// print the intersect with target User
+			result += comparedP.getUserId()+": ";
+			for (int rating : intersection){
+				result += rating+" ";
+			}
+			result += "\n";
+			
+			// find ratings from intersecting items
+			double[] targetRatings = new double[intersection.length];
+			double[] comparedRatings = new double[intersection.length];
+			double targetAverage = 0;
+			double comparedAverage = 0;
+			
+			for (int i=0; i < intersection.length; i++){
+				targetAverage += targetRatings[i] = targetP.getRating(intersection[i]);
+				comparedAverage += comparedRatings[i] = comparedP.getRating(intersection[i]);
+			}
+			
+			// calculate averages
+			targetAverage /= intersection.length;
+			comparedAverage /= intersection.length;
+			
+			result += "targetAverage: "+targetAverage+"\n";
+			result += "comparedAverage: "+comparedAverage+"\n";
+			
+			double dividend = 0;
+			double divisor;
+			double divisorLeft = 0;
+			double divisorRight = 0;
+			
+			for (int i=0; i<intersection.length; i++){
+				dividend += (targetRatings[i]-targetAverage)*(comparedRatings[i]-comparedAverage);
+				divisorLeft += (targetRatings[i]-targetAverage)*(targetRatings[i]-targetAverage);
+				divisorRight += (comparedRatings[i]-comparedAverage)*(comparedRatings[i]-comparedAverage);
+			}
+			divisor = Math.sqrt(divisorLeft * divisorRight);
+			
+			double pearsonsCorrelation = dividend/divisor;
+			
+			result += "Pearson's correlation: "+pearsonsCorrelation+"\n\n";
+		}		
+		
+				
+		
+		result += "\n\n";
+		
+		return result;
+	}
+	
+	
 	
 	/*
 	 * Loads the sample data from database and passes it directly into the collection of ratings

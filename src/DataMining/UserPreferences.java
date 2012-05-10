@@ -10,9 +10,6 @@ import com.mongodb.DBObject;
 import com.mongodb.DBCursor;
 import com.mongodb.MongoException;
 
-/**
- * User: Maarten Date: 25-4-12 Time: 11:46
- */
 public class UserPreferences {
 
 	private int userId;
@@ -57,6 +54,20 @@ public class UserPreferences {
 				ratings = newRatings;
 			}
 
+	}
+	
+	public int[] getItemIds(){
+		return itemIds;
+	}
+	
+	public int getUserId(){
+		return userId;
+	}
+	
+	public double getRating(int itemId){
+		int index = Arrays.binarySearch(itemIds, itemId);
+		if (index < 0) return index;
+		return ratings[index];
 	}
 	
 	@Override
