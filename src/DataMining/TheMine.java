@@ -10,7 +10,9 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Random;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -94,6 +96,8 @@ public class TheMine {
 	}
 
 	public static String getRecommendation(int userId){
+		
+		HashMap<Integer, Double[]> items = new HashMap<Integer, Double[]>();	// Here we will store a list possible items to recommend
 		String result = "";
 				
 		UserPreferences targetP = userPrefs.get(userId);
@@ -142,9 +146,6 @@ public class TheMine {
 			targetAverage /= intersection.length;
 			comparedAverage /= intersection.length;
 			
-			result += "targetAverage: "+targetAverage+"\n";
-			result += "comparedAverage: "+comparedAverage+"\n";
-			
 			double dividend = 0;
 			double divisor;
 			double divisorLeft = 0;
@@ -158,11 +159,37 @@ public class TheMine {
 			divisor = Math.sqrt(divisorLeft * divisorRight);
 			
 			double pearsonsCorrelation = dividend/divisor;
+			result += "Pearson's correlation: "+pearsonsCorrelation+"\n";
 			
-			result += "Pearson's correlation: "+pearsonsCorrelation+"\n\n";
+			for (int itemId : relativeComplement){
+				if (items.containsKey(itemId)){
+					Double[] newValues = items.get(itemId);
+					newValues[0] += pearsonsCorrelation;
+					newValues[1] += pearsonsCorrelation*comparedP.getRating(itemId);
+					items.put(itemId, newValues);
+				} else {
+					items.put(itemId, new Double[]{pearsonsCorrelation,pearsonsCorrelation*comparedP.getRating(itemId)});
+				}
+				result += itemId+": "+ pearsonsCorrelation*comparedP.getRating(itemId)+"\n";
+			}
+			result += "\n";
+			
 		}		
 		
-				
+		LinkedHashMap<Integer, Double> recommendations = new LinkedHashMap<Integer, Double>();
+		for (Integer key : items.keySet()){
+			Double[] oldValues = items.get(key);
+			Double newValue = oldValues[1]/oldValues[0];
+			recommendations.put(key, newValue);
+		}
+		
+		recommendations = (LinkedHashMap<Integer, Double>) MapUtil.reverseSortByValue(recommendations);
+		
+		for (Integer itemId : recommendations.keySet()){
+			result += itemId+": "+recommendations.get(itemId)+"\n";
+		}
+		
+		
 		
 		result += "\n\n";
 		
