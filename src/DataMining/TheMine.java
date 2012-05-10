@@ -49,18 +49,17 @@ public class TheMine {
 		userPrefs = new TreeMap<Integer, UserPreferences>();
 		
 		// Import the test data
-		if (db.getCollection("test_data").count() == 0)
-			loadFileIntoDatabase("testdata.txt", "test_data");
-
-		// Load data from database into userPrefs
-		loadFromDatabase("test_data");
+//		if (db.getCollection("test_data").count() == 0)
+//			loadFileIntoDatabase("testdata.txt", "test_data");
+//
+//		// Load data from database into userPrefs
+//		loadFromDatabase("test_data");
 
 		// Print all ratings for all users
 //		for (UserPreferences uP : userPrefs.values()) {
 //			System.out.println(uP.toString());
 //		}
 		
-		System.out.println(getRecommendation(7));
 
 	
 		/*
@@ -73,14 +72,15 @@ public class TheMine {
 //		if (db.getCollection("movie_ratings").count() == 0)
 //			loadFileIntoDatabase("u.data", "movie_ratings");
 //
-//		// Load data from database into userPrefs
-//		loadFromDatabase("movie_ratings");
-//
+		// Load data from database into userPrefs
+		loadFromDatabase("movie_ratings");
+
 //		// Print all ratings for all users
 //		for (UserPreferences uP : userPrefs.values()) {
 //			System.out.println(uP.toString());
 //		}
 
+		System.out.println(getRecommendation(941, 5));
 				
 		// Close connection to database
 		con.close();
@@ -95,7 +95,7 @@ public class TheMine {
 		uP.addRating(itemId, rating);
 	}
 
-	public static String getRecommendation(int userId){
+	public static String getRecommendation(int userId, int numberOfResults){
 		
 		HashMap<Integer, Double[]> items = new HashMap<Integer, Double[]>();	// Here we will store a list possible items to recommend
 		String result = "";
@@ -106,13 +106,16 @@ public class TheMine {
 		
 		for (UserPreferences comparedP : userPrefs.values()){
 			
+			// No need to compared the target user to himself
 			if (comparedP.getUserId() == userId){
-				break;
+				continue;
 			}
 			
+			// determine what items have been rated by both users,
+			// and what items have only been rated by the compared user
 			int[] comparedUserItemIds = comparedP.getItemIds();
 			int[] intersection = new int[0];					// items rated by both users
-			Integer[] relativeComplement = new Integer[0];		// items only rated by compared user
+			int[] relativeComplement = new int[0];		// items only rated by compared user
 			
 			for (int id : comparedUserItemIds){
 				if (Arrays.binarySearch(targetUserItemIds, id) >= 0){
@@ -124,7 +127,14 @@ public class TheMine {
 				}
 			}
 			
-			// print the intersect with target User
+			
+			
+			// skip a user that will yield no recommendations
+			if ((intersection.length == 0) || (relativeComplement.length == 0)){
+				continue;
+			}
+			
+			// print the intersection between both users
 			result += comparedP.getUserId()+": ";
 			for (int rating : intersection){
 				result += rating+" ";
@@ -138,14 +148,15 @@ public class TheMine {
 			double comparedAverage = 0;
 			
 			for (int i=0; i < intersection.length; i++){
-				targetAverage += targetRatings[i] = targetP.getRating(intersection[i]);
-				comparedAverage += comparedRatings[i] = comparedP.getRating(intersection[i]);
+				targetAverage += targetRatings[i] = targetP.getRating(intersection[i]);			// append and add to target user
+				comparedAverage += comparedRatings[i] = comparedP.getRating(intersection[i]);	// append and add to compared user
 			}
 			
 			// calculate averages
 			targetAverage /= intersection.length;
 			comparedAverage /= intersection.length;
 			
+			// build the general components of the Pearson's correlation algorithm
 			double dividend = 0;
 			double divisor;
 			double divisorLeft = 0;
@@ -156,11 +167,25 @@ public class TheMine {
 				divisorLeft += (targetRatings[i]-targetAverage)*(targetRatings[i]-targetAverage);
 				divisorRight += (comparedRatings[i]-comparedAverage)*(comparedRatings[i]-comparedAverage);
 			}
+						
 			divisor = Math.sqrt(divisorLeft * divisorRight);
 			
+//			result += "dividend: "+dividend+"\n";
+//			result += "divisorLeft: "+divisorLeft+"\n";
+//			result += "divisorRight: "+divisorRight+"\n";
+//			result += "divisor: "+divisor+"\n";
+			
+			// Skip where Pearson's correlation will render NaN
+			if ((dividend == 0) && (divisor == 0)){
+				result += "\n";
+				continue;
+			}
+			
+			// calculate Pearson's correlation between target user and compared user 
 			double pearsonsCorrelation = dividend/divisor;
 			result += "Pearson's correlation: "+pearsonsCorrelation+"\n";
 			
+			// for each item in the relative complement, add correlation and weighted rating
 			for (int itemId : relativeComplement){
 				if (items.containsKey(itemId)){
 					Double[] newValues = items.get(itemId);
@@ -170,23 +195,35 @@ public class TheMine {
 				} else {
 					items.put(itemId, new Double[]{pearsonsCorrelation,pearsonsCorrelation*comparedP.getRating(itemId)});
 				}
-				result += itemId+": "+ pearsonsCorrelation*comparedP.getRating(itemId)+"\n";
 			}
 			result += "\n";
 			
 		}		
 		
+		// Calculate final ratings
 		LinkedHashMap<Integer, Double> recommendations = new LinkedHashMap<Integer, Double>();
 		for (Integer key : items.keySet()){
 			Double[] oldValues = items.get(key);
+			
+			// Skip if new rating would render NaN
+			if ((oldValues[0] == 0) && (oldValues[1] == 0)){
+				continue;
+			}
+			
+			
 			Double newValue = oldValues[1]/oldValues[0];
 			recommendations.put(key, newValue);
 		}
 		
+		// Reverse sort the final ratings
 		recommendations = (LinkedHashMap<Integer, Double>) MapUtil.reverseSortByValue(recommendations);
 		
+		int i = 1;
 		for (Integer itemId : recommendations.keySet()){
 			result += itemId+": "+recommendations.get(itemId)+"\n";
+			if ((i+=1) > numberOfResults){
+				break;
+			}
 		}
 		
 		
