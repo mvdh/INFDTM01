@@ -7,14 +7,11 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Random;
-import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
 
@@ -95,145 +92,119 @@ public class TheMine {
 		uP.addRating(itemId, rating);
 	}
 
-	public static String getRecommendation(int userId, int numberOfResults){
-		
-		HashMap<Integer, Double[]> items = new HashMap<Integer, Double[]>();	// Here we will store a list possible items to recommend
-		String result = "";
-				
-		UserPreferences targetP = userPrefs.get(userId);
-		
-		int[] targetUserItemIds = targetP.getItemIds();
-		
-		for (UserPreferences comparedP : userPrefs.values()){
-			
-			// No need to compared the target user to himself
-			if (comparedP.getUserId() == userId){
-				continue;
-			}
-			
-			// determine what items have been rated by both users,
-			// and what items have only been rated by the compared user
-			int[] comparedUserItemIds = comparedP.getItemIds();
-			int[] intersection = new int[0];					// items rated by both users
-			int[] relativeComplement = new int[0];		// items only rated by compared user
-			
-			for (int id : comparedUserItemIds){
-				if (Arrays.binarySearch(targetUserItemIds, id) >= 0){
-					intersection = Arrays.copyOf(intersection, intersection.length+1);
-					intersection[intersection.length-1] = id;
-				} else {
-					relativeComplement = Arrays.copyOf(relativeComplement, relativeComplement.length+1);
-					relativeComplement[relativeComplement.length-1] = id;
-				}
-			}
-			
-			
-			
-			// skip a user that will yield no recommendations
-			if ((intersection.length == 0) || (relativeComplement.length == 0)){
-				continue;
-			}
-			
-			// print the intersection between both users
-			result += comparedP.getUserId()+": ";
-			for (int rating : intersection){
-				result += rating+" ";
-			}
-			result += "\n";
-			
-			// find ratings from intersecting items
-			double[] targetRatings = new double[intersection.length];
-			double[] comparedRatings = new double[intersection.length];
-			double targetAverage = 0;
-			double comparedAverage = 0;
-			
-			for (int i=0; i < intersection.length; i++){
-				targetAverage += targetRatings[i] = targetP.getRating(intersection[i]);			// append and add to target user
-				comparedAverage += comparedRatings[i] = comparedP.getRating(intersection[i]);	// append and add to compared user
-			}
-			
-			// calculate averages
-			targetAverage /= intersection.length;
-			comparedAverage /= intersection.length;
-			
-			// build the general components of the Pearson's correlation algorithm
-			double dividend = 0;
-			double divisor;
-			double divisorLeft = 0;
-			double divisorRight = 0;
-			
-			for (int i=0; i<intersection.length; i++){
-				dividend += (targetRatings[i]-targetAverage)*(comparedRatings[i]-comparedAverage);
-				divisorLeft += (targetRatings[i]-targetAverage)*(targetRatings[i]-targetAverage);
-				divisorRight += (comparedRatings[i]-comparedAverage)*(comparedRatings[i]-comparedAverage);
-			}
-						
-			divisor = Math.sqrt(divisorLeft * divisorRight);
-			
-//			result += "dividend: "+dividend+"\n";
-//			result += "divisorLeft: "+divisorLeft+"\n";
-//			result += "divisorRight: "+divisorRight+"\n";
-//			result += "divisor: "+divisor+"\n";
-			
-			// Skip where Pearson's correlation will render NaN
-			if ((dividend == 0) && (divisor == 0)){
-				result += "\n";
-				continue;
-			}
-			
-			// calculate Pearson's correlation between target user and compared user 
-			double pearsonsCorrelation = dividend/divisor;
-			result += "Pearson's correlation: "+pearsonsCorrelation+"\n";
-			
-			// for each item in the relative complement, add correlation and weighted rating
-			for (int itemId : relativeComplement){
-				if (items.containsKey(itemId)){
-					Double[] newValues = items.get(itemId);
-					newValues[0] += pearsonsCorrelation;
-					newValues[1] += pearsonsCorrelation*comparedP.getRating(itemId);
-					items.put(itemId, newValues);
-				} else {
-					items.put(itemId, new Double[]{pearsonsCorrelation,pearsonsCorrelation*comparedP.getRating(itemId)});
-				}
-			}
-			result += "\n";
-			
-		}		
-		
-		// Calculate final ratings
-		LinkedHashMap<Integer, Double> recommendations = new LinkedHashMap<Integer, Double>();
-		for (Integer key : items.keySet()){
-			Double[] oldValues = items.get(key);
-			
-			// Skip if new rating would render NaN
-			if ((oldValues[0] == 0) && (oldValues[1] == 0)){
-				continue;
-			}
-			
-			
-			Double newValue = oldValues[1]/oldValues[0];
-			recommendations.put(key, newValue);
-		}
-		
-		// Reverse sort the final ratings
-		recommendations = (LinkedHashMap<Integer, Double>) MapUtil.reverseSortByValue(recommendations);
-		
-		int i = 1;
-		for (Integer itemId : recommendations.keySet()){
-			result += itemId+": "+recommendations.get(itemId)+"\n";
-			if ((i+=1) > numberOfResults){
-				break;
-			}
-		}
-		
-		
-		
-		result += "\n\n";
-		
-		return result;
-	}
-	
-	
+    public static String getRecommendation(int userId, int numberOfResults){
+
+        HashMap<Integer, Double[]> items = new HashMap<Integer, Double[]>();	// Here we will store a list possible items to recommend
+        String result = "";
+
+        UserPreferences targetP = userPrefs.get(userId);
+
+        int[] targetUserItemIds = targetP.getItemIds();
+
+        for (UserPreferences comparedP : userPrefs.values()){
+
+            // No need to compared the target user to himself
+            if (comparedP.getUserId() == userId){
+                continue;
+            }
+
+            // determine what items have been rated by both users,
+            // and what items have only been rated by the compared user
+            int[] comparedUserItemIds = comparedP.getItemIds();
+            int[] intersection = new int[0];					// items rated by both users
+            int[] relativeComplement = new int[0];		// items only rated by compared user
+
+            for (int id : comparedUserItemIds){
+                if (Arrays.binarySearch(targetUserItemIds, id) >= 0){
+                    intersection = Arrays.copyOf(intersection, intersection.length+1);
+                    intersection[intersection.length-1] = id;
+                } else {
+                    relativeComplement = Arrays.copyOf(relativeComplement, relativeComplement.length+1);
+                    relativeComplement[relativeComplement.length-1] = id;
+                }
+            }
+
+
+
+            // skip a user that will yield no recommendations
+            if ((intersection.length == 0) || (relativeComplement.length == 0)){
+                continue;
+            }
+
+            // print the intersection between both users
+            result += comparedP.getUserId()+": ";
+            for (int rating : intersection){
+                result += rating+" ";
+            }
+            result += "\n";
+
+            // find ratings from intersecting items
+            double[] targetRatings = new double[intersection.length];
+            double[] comparedRatings = new double[intersection.length];
+
+            for (int i=0; i < intersection.length; i++){
+                targetRatings[i] = targetP.getRating(intersection[i]);			// append and add to target user
+                comparedRatings[i] = comparedP.getRating(intersection[i]);	// append and add to compared user
+            }
+
+            // calculate Pearson's correlation between target user and compared user
+            double pearsonsCorrelation = pearsonCorrelationCoefficient(targetRatings, comparedRatings);
+
+            // Skip where Pearson's correlation will render NaN
+            if (pearsonsCorrelation == 2){
+                result += "\n";
+                continue;
+            }
+
+            result += "Pearson's correlation: "+pearsonsCorrelation+"\n";
+
+            // for each item in the relative complement, add correlation and weighted rating
+            for (int itemId : relativeComplement){
+                if (items.containsKey(itemId)){
+                    Double[] newValues = items.get(itemId);
+                    newValues[0] += pearsonsCorrelation;
+                    newValues[1] += pearsonsCorrelation*comparedP.getRating(itemId);
+                    items.put(itemId, newValues);
+                } else {
+                    items.put(itemId, new Double[]{pearsonsCorrelation,pearsonsCorrelation*comparedP.getRating(itemId)});
+                }
+            }
+            result += "\n";
+
+        }
+
+        // Calculate final ratings
+        LinkedHashMap<Integer, Double> recommendations = new LinkedHashMap<Integer, Double>();
+        for (Integer key : items.keySet()){
+            Double[] oldValues = items.get(key);
+
+            // Skip if new rating would render NaN
+            if ((oldValues[0] == 0) && (oldValues[1] == 0)){
+                continue;
+            }
+
+
+            Double newValue = oldValues[1]/oldValues[0];
+            recommendations.put(key, newValue);
+        }
+
+        // Reverse sort the final ratings
+        recommendations = (LinkedHashMap<Integer, Double>) MapUtil.reverseSortByValue(recommendations);
+
+        int i = 1;
+        for (Integer itemId : recommendations.keySet()){
+            result += itemId+": "+recommendations.get(itemId)+"\n";
+            if ((i+=1) > numberOfResults){
+                break;
+            }
+        }
+
+
+
+        result += "\n\n";
+
+        return result;
+    }
 	
 	/*
 	 * Loads the sample data from database and passes it directly into the collection of ratings
@@ -262,7 +233,16 @@ public class TheMine {
         	addRating(userId, itemId, rating);
         }
 	}	
-	
+
+    public static void getItemItemRecommendation(int userId, int itemId, int numberOfResults) {
+        //load userPrefs
+
+        //complete matrix of all users against all items
+            //get all userids
+            //get all itemids
+
+    }
+
 	/*
 	 * Loads the sample data file and passes it directly into the collection of ratings
 	 */
@@ -373,4 +353,33 @@ public class TheMine {
 		db = con.getDB( "infdtm" );
 	}
 
+    public static double pearsonCorrelationCoefficient(double[] x, double[] y) {
+        double xAvg = 0.0;
+        double yAvg = 0.0;
+        for (int i = 0; i < x.length; i++) {
+            xAvg += x[i];
+            yAvg += y[i];
+        }
+        xAvg /= x.length;
+        yAvg /= x.length;
+
+
+        double numerator = 0.0;
+        double denominator;
+        double denomPartX = 0.0;
+        double denomPartY = 0.0;
+        for (int i = 0; i < x.length; i++){
+            numerator += (x[i]-xAvg) * (y[i]-yAvg);
+            denomPartX += Math.pow(x[i]-xAvg, 2.0);
+            denomPartY += Math.pow(y[i]-yAvg, 2.0);
+        }
+        denominator = Math.sqrt(denomPartX * denomPartY);
+
+
+        if (denominator == 0){
+            return 2;
+        }
+
+        return numerator/denominator;
+    }
 }
