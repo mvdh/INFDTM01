@@ -70,21 +70,23 @@ public class TheMine {
 //			loadFileIntoDatabase("u.data", "movie_ratings");
 //
 		// Load data from database into userPrefs
-		loadFromDatabase("movie_ratings", 99000);
+		loadFromDatabase("movie_ratings", 10000);
 
 //		// Print all ratings for all users
 //		for (UserPreferences uP : userPrefs.values()) {
 //			System.out.println(uP.toString());
 //		}
 
-		System.out.println(getRecommendation(712, 5));
+//		System.out.println(getRecommendation(712, 5));
 
 
-		loadFromDatabase("movie_ratings");
+//		loadFromDatabase("movie_ratings");
 
-		System.out.println(getRecommendation(712, 5));
-		
-		
+//		System.out.println(getRecommendation(712, 5));
+
+        ItemItem ii = new ItemItem(userPrefs);
+        ii.getRecommendation(userPrefs.get(712));
+//        ii.printMatrix();
 		// Close connection to database
 		con.close();
 
@@ -416,4 +418,9 @@ public class TheMine {
 
         return numerator/denominator;
     }
+
+
+
+
+
 }
