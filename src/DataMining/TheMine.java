@@ -70,15 +70,21 @@ public class TheMine {
 //			loadFileIntoDatabase("u.data", "movie_ratings");
 //
 		// Load data from database into userPrefs
-		loadFromDatabase("movie_ratings");
+		loadFromDatabase("movie_ratings", 99000);
 
 //		// Print all ratings for all users
 //		for (UserPreferences uP : userPrefs.values()) {
 //			System.out.println(uP.toString());
 //		}
 
-		System.out.println(getRecommendation(941, 5));
-				
+		System.out.println(getRecommendation(712, 5));
+
+
+		loadFromDatabase("movie_ratings");
+
+		System.out.println(getRecommendation(712, 5));
+		
+		
 		// Close connection to database
 		con.close();
 
@@ -132,18 +138,18 @@ public class TheMine {
             }
 
             // print the intersection between both users
-            result += comparedP.getUserId()+": ";
-            for (int rating : intersection){
-                result += rating+" ";
-            }
-            result += "\n";
+//            result += comparedP.getUserId()+": ";
+//            for (int rating : intersection){
+//                result += rating+" ";
+//            }
+//            result += "\n";
 
             // find ratings from intersecting items
             double[] targetRatings = new double[intersection.length];
             double[] comparedRatings = new double[intersection.length];
 
             for (int i=0; i < intersection.length; i++){
-                targetRatings[i] = targetP.getRating(intersection[i]);			// append and add to target user
+                targetRatings[i] = targetP.getRating(intersection[i]);		// append and add to target user
                 comparedRatings[i] = comparedP.getRating(intersection[i]);	// append and add to compared user
             }
 
@@ -152,11 +158,11 @@ public class TheMine {
 
             // Skip where Pearson's correlation will render NaN
             if (pearsonsCorrelation == 2){
-                result += "\n";
+//                result += "\n";
                 continue;
             }
 
-            result += "Pearson's correlation: "+pearsonsCorrelation+"\n";
+//            result += "Pearson's correlation: "+pearsonsCorrelation+"\n";
 
             // for each item in the relative complement, add correlation and weighted rating
             for (int itemId : relativeComplement){
@@ -169,7 +175,7 @@ public class TheMine {
                     items.put(itemId, new Double[]{pearsonsCorrelation,pearsonsCorrelation*comparedP.getRating(itemId)});
                 }
             }
-            result += "\n";
+//            result += "\n";
 
         }
 
@@ -234,6 +240,34 @@ public class TheMine {
         }
 	}	
 
+	/*
+	 * Loads the sample data from database and passes it directly into the collection of ratings
+	 */
+	public static void loadFromDatabase(String collection, int count) {
+
+		DBObject doc;
+		DBCollection coll = db.getCollection(collection);
+
+		// Build a filter for fields to limit the amount of data sent back from DB
+		BasicDBObject subset = new BasicDBObject();
+		subset.put("user_id", 1);
+		subset.put("item_id", 1);
+		subset.put("rating", 1);
+		subset.put("_id", 0);
+		
+		// First argument is an empty document to gain access to the second argument
+		// The sort is applied in case a movie has been rated twice by the same user 
+		DBCursor cur = coll.find(new BasicDBObject(), subset).sort(new BasicDBObject("date", 1)).limit(count);
+		
+        while(cur.hasNext()) {
+        	doc = cur.next();
+        	int userId = (Integer)doc.get("user_id");
+        	int itemId = (Integer)doc.get("item_id");
+        	double rating = (Double)doc.get("rating");
+        	addRating(userId, itemId, rating);
+        }
+	}	
+	
     public static void getItemItemRecommendation(int userId, int itemId, int numberOfResults) {
         //load userPrefs
 
@@ -297,7 +331,7 @@ public class TheMine {
 			String strLine;
 			// Read File Line By Line
 			while ((strLine = br.readLine()) != null) {
-				StringTokenizer st = new StringTokenizer(strLine, "	");
+				StringTokenizer st = new StringTokenizer(strLine, "\t::");
 				
 				// Build new document
 				doc = new BasicDBObject();
