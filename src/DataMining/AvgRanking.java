@@ -10,12 +10,10 @@ public class AvgRanking {
 
     private int count;
     private double sumRankings;
-    private double avgDiff;
 
     public AvgRanking() {
         count = 0;
         sumRankings = 0;
-        avgDiff = 0;
     }
 
     public int getCount() {
@@ -29,10 +27,14 @@ public class AvgRanking {
     public void addRanking(double r) {
         this.sumRankings += r;
         this.count++;
-        this.avgDiff = this.sumRankings / (double) this.count;
+    }
+
+    public void removeRanking(double r) {
+        this.sumRankings -= r;
+        this.count--;
     }
 
     public double getAvgDiff() {
-        return this.avgDiff;
+        return this.sumRankings / (double) this.count;
     }
 }

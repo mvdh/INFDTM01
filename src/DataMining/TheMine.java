@@ -70,7 +70,7 @@ public class TheMine {
 //			loadFileIntoDatabase("u.data", "movie_ratings");
 //
 		// Load data from database into userPrefs
-		loadFromDatabase("movie_ratings", 10000);
+//		loadFromDatabase("movie_ratings", 10);
 
 //		// Print all ratings for all users
 //		for (UserPreferences uP : userPrefs.values()) {
@@ -78,19 +78,77 @@ public class TheMine {
 //		}
 
 //		System.out.println(getRecommendation(712, 5));
-
-
 //		loadFromDatabase("movie_ratings");
-
 //		System.out.println(getRecommendation(712, 5));
 
-        ItemItem ii = new ItemItem(userPrefs);
-        ii.getRecommendation(userPrefs.get(712));
-//        ii.printMatrix();
+        itemItemShowPreferenceChange();
+        itemItemShowRecommendation();
+
 		// Close connection to database
 		con.close();
 
 	}
+
+    public static void itemItemShowPreferenceChange() {
+        loadFromDatabase("movie_ratings", 4);
+        ItemItem ii = new ItemItem();
+        ii.printMatrix();
+        for (UserPreferences uP : userPrefs.values()) {
+            ii.addUserPreferences(uP);
+        }
+        System.out.println("=====================");
+        System.out.println("Matrix is gevuld.");
+        ii.printMatrix();
+        System.out.println("=====================");
+        for (UserPreferences uP : userPrefs.values()) {
+            ii.removeUserPreferences(uP);
+        }
+        System.out.println("Matrix is nu leeg gemaakt.");
+        ii.printMatrix();
+        System.out.println("=====================");
+
+
+        UserPreferences u = new UserPreferences(12);
+        u.addRating(1, 5.0);
+        u.addRating(2, 2.0);
+        u.addRating(3, 4.0);
+        u.addRating(4, 3.5);
+        u.addRating(5, 1.0);
+
+        ii.addUserPreferences(u);
+        System.out.println("Matrix gevuld met nieuwe UserPreferences.");
+        ii.printMatrix();
+        System.out.println("=====================");
+
+        UserPreferences newU = new UserPreferences(12);
+        newU.addRating(2, 2.0);
+        newU.addRating(4, 3.5);
+        newU.addRating(6, 1.0);
+
+        ii.updateSlopeOneTable(u, newU);
+        System.out.println("Matrix met een update van een Userpreferences. (oneven items zijn weg)");
+        ii.printMatrix();
+        System.out.println("=====================");
+
+        UserPreferences uu = new UserPreferences(1);
+        uu.addRating(2, 1.0);
+        uu.addRating(4, 5.0);
+        uu.addRating(6, 4.5);
+
+        ii.addUserPreferences(uu);
+        System.out.println("Matrix gevuld met nieuwe UserPreferences met ratings voor dezelfde items");
+        ii.printMatrix();
+        System.out.println("=====================");
+    }
+
+    public static void itemItemShowRecommendation() {
+        loadFromDatabase("movie_ratings", 10000);
+        System.out.println("=====================");
+        System.out.println("=====================");
+        System.out.println("Aanbevolen items:");
+        ItemItem ii = new ItemItem(userPrefs);
+        System.out.println(ii.getRecommendation(userPrefs.get(712), 5));
+    }
 
 	public static void addRating(int userId, int itemId, double rating) {
 		if (!userPrefs.containsKey(userId)) {
